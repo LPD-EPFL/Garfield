@@ -1,0 +1,14 @@
+# Ignore compiled objects
+*__pycache__/
+*.pyc
+*.o
+*.so
+*.ninja_deps
+*.ninja_log
+*build.ninja
+*workers*
+*servers*
+*.DS_Store
+# Ignore saved models
+saved/
+*.swp

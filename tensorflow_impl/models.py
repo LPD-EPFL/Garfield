@@ -2,6 +2,7 @@
 ###
  # @file   models.py
  # @author Sébastien Rouault <sebastien.rouault@alumni.epfl.ch>
+ #         Arsany Guirguis <arsany.guirguis@epfl.ch>
  #
  # @section LICENSE
  #
@@ -9,9 +10,13 @@
  # See LICENSE file.
 ###
 
+import math
 import numpy
+import os
+import time
 
 import tensorflow as tf
+update_module = tf.load_op_library(os.path.join(tf.resource_loader.get_data_files_path(), './update_model.so'))
 
 # ---------------------------------------------------------------------------- #
 
@@ -479,6 +484,42 @@ class FeedForward:
         """
         sess = type(self).__get_sess(sess)
         return sess.run(self.op_update, feed_dict={self.tn_grad_in: grad})
+
+    def update2(self, grad, sess=None):
+        sess = type(self).__get_sess(sess)
+        cur_ptr = 0
+        lr = -0.001
+        try:
+          ind=0
+          for var in self.tn_variables:
+            size = self.var_sizes[ind]
+            shape = self.var_shapes[ind]
+            var.load(var.eval() - lr*(grad[cur_ptr:cur_ptr+size].reshape(shape)), sess)
+#            sess.run(var.assign_add(lr*(grad[cur_ptr:cur_ptr+size].reshape(shape))))
+            cur_ptr+=size
+            ind+=1
+        except Exception as e:
+          print("Exception: ", e)
+        addone = self.tn_epoch_out.assign_add(1)
+        sess.run(addone)
+
+    def update3(self, grad, sess=None):
+        sess = type(self).__get_sess(sess)
+        cur_ptr = 0
+        try:
+          ind=0
+          for var in self.tn_variables:
+            size = self.var_sizes[ind]
+            shape = self.var_shapes[ind]
+            ref = tf.convert_to_tensor(grad[cur_ptr:cur_ptr+size].reshape(shape))
+            out = update_module.update_model(var, ref)
+            sess.run(tf.assign(var, out))
+            cur_ptr+=size
+            ind+=1
+        except Exception as e:
+          print("Exception: ", e)
+        addone = self.tn_epoch_out.assign_add(1)
+        sess.run(addone)
 
     def fit(self, x=None, y=None, grad=False, sess=None):
         """ Compute the (flat) gradient and update the model accordingly in one run.

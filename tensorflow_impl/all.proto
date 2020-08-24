@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+//This service is a general one. It includes all information that is required to be transferred between the PS and workers
+
+service TrainMessageExchange {
+
+   rpc GetPublicKey(Empty) returns (PublicKey) {}
+   rpc GetUnifiedModel(Empty) returns (Model) {}
+   rpc GetCompleteModel(Request) returns (CompleteModel) {}
+   rpc GetOnlyHash(Request) returns (CompleteModel) {}
+   rpc GetGradHashes(Request) returns (GradHashes) {}
+   rpc GetGradHash(Request) returns (GradHash) {}
+   rpc GetGradients(Request) returns (Gradients) {}
+   rpc GetModel(Request) returns (Model) {}
+}
+
+message Empty {}
+message Request {
+   int32 iter = 1;						//any request would include the number of the required iteration
+   int32 req_id = 2;						//the id of the sender of this request..this is sometimes useful
+}
+
+message PublicKey {
+  int32 index = 1;
+  bytes pubKey = 2;
+}
+
+message Model {
+   bytes model = 1;
+   bool init = 2;
+   int32 iter = 3;
+}
+
+message Signature {
+   bool init = 1;
+   bytes signature = 2;
+   int32 index = 3;
+}
+
+message CompleteModel {
+   bytes inputs = 1;
+   bytes labels = 2;
+   Model model = 3;
+   int32 iter = 4;							//This indicates the iteartion number of the sent model
+   repeated int32 correctProc = 5;			//optional
+   repeated bytes signatures = 6;			//optional
+   bytes msgHash = 7;						//optional
+}
+
+message GradHashes {
+   repeated string gradHash = 1;
+   int32 iter = 2;
+}
+
+message GradHash {
+   int32 index = 1;
+   bytes g_hash = 2;
+   int32 iter = 3;
+}
+
+message Gradients {
+   bytes gradients = 1;
+   float iter = 2;
+   float lipschitz = 3;						//This is optional..used only in the smart solution with filtering at the worker and the PS
+}

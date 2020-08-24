@@ -2,6 +2,7 @@
 ###
  # @file   datasets.py
  # @author Sébastien Rouault <sebastien.rouault@alumni.epfl.ch>
+ #         Arsany Guirguis <arsany.guirguis@epfl.ch>
  #
  # @section LICENSE
  #
@@ -116,7 +117,8 @@ class NumpySet:
             self.__batches = [(args[0], args[1])] if nbargs == 2 else args[2]
         else: # Graph constructor
             raise NotImplementedError("NumpySet from-graph constructor not implemented")
-
+    def get_inputs(self):
+        return self.__inputs
     def __iter__(self):
         """ Get a new iterator on the batches.
         Returns:
