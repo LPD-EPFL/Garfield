@@ -44,7 +44,7 @@ import random
 import math
 import all_pb2, all_pb2_grpc
 import grpc
-from grpc_service_impl_slim import TrainMessageExchangeServicer
+from grpc_service_impl import TrainMessageExchangeServicer
 from concurrent import futures
 import threading
 from multiprocessing.dummy import Pool as ThreadPool
@@ -141,7 +141,7 @@ parser.add_argument('--vanilla',
 type=bool,
 default=False,
 help='If True, the vanilla, non-byzantine case is executed. This is the baseline that we should compare with.')
-parser.add_argument('--async',
+parser.add_argument('--asyncr',
 type=bool,
 default=False,
 help='If True, the network is assumed to be asynchronous. Thus, only qourum is waited before proceeding.')
@@ -245,8 +245,8 @@ def get_grad(conn):
         exit(0)
   return grad
 
-quorum = (2*num_byzwrks + 3) if FLAGS.async else num_workers
-quorum_ps = (2*num_byzps + 3) if FLAGS.async else num_ps
+quorum = (2*num_byzwrks + 3) if FLAGS.asyncr else num_workers
+quorum_ps = (2*num_byzps + 3) if FLAGS.asyncr else num_ps
 grads = [tf.placeholder(dtype=tf.float32, shape=(grad_length)) for _ in range(quorum)]
 grads_ps = [tf.placeholder(dtype=tf.float32, shape=(grad_length)) for _ in range(quorum_ps)]
 grads_nt = []
@@ -254,7 +254,7 @@ grads_ps_nt = []
 #Create pools for parallelizing reading gradients
 pool_ps = ThreadPool(quorum_ps)
 pool_wk = ThreadPool(quorum)
-#Read gradients from workers (or PSes, in case of the async protocol)
+#Read gradients from workers (or PSes, in case of the asyncr protocol)
 def read_gradients(PS=False):
   if FLAGS.log:
     println("[PS] trying to read gradients")
@@ -298,7 +298,7 @@ with tf.device('/'+device+':'+str(FLAGS.task_index%2)):
   #Initializing aggregators.....
   #Krum
   q_size = num_workers
-  if FLAGS.async:
+  if FLAGS.asyncr:
     q_size = (2*num_byzwrks) + 3
   krum_op = aggregators.instantiate("krum", q_size, num_byzwrks, None)
   #Average
@@ -317,11 +317,11 @@ with tf.device('/'+device+':'+str(FLAGS.task_index%2)):
   grads = [tf.placeholder(dtype=tf.float32, shape=(grad_length)) for _ in range(quorum)]
   if FLAGS.smart:
     last_grad = krum_op.aggregate(grads)		#This list is defined above
-  elif FLAGS.async:
+  elif FLAGS.asyncr:
     last_grad = krum_op.aggregate(grads)			#Apply the strongest GAR
   elif FLAGS.vanilla:
     last_grad = avg_op.aggregate(grads)                #This list is defined above
-  if FLAGS.async:		#Then more steps are required before applying this aggregated gradients
+  if FLAGS.asyncr:		#Then more steps are required before applying this aggregated gradients
     grads_ps = [tf.placeholder(dtype=tf.float32, shape=(grad_length)) for _ in range(quorum_ps)]
     med_grad = med_op.aggregate(grads_ps)
     apply_op = optimizer.apply_gradients(helper.inflate(med_grad, helper.mapflat(flatmap)))
@@ -437,7 +437,7 @@ with sess.as_default():
       println("[PS "+str(FLAGS.task_index)+"] time to create feed_dict is: " + str(time.time() - feed_t))
       run_t = time.time()
     try:
-      if FLAGS.async:
+      if FLAGS.asyncr:
         aggr_res = sess.run(last_grad, feed_dict=feed_dict)
       else:
         aggr_res,_ = sess.run([last_grad, apply_op], feed_dict=feed_dict)
@@ -449,10 +449,10 @@ with sess.as_default():
       exit(0)
     if FLAGS.log:
       println("[PS] Aggregation at PS...done!")
-    #If the async protocol, one more round of exchanging gradients between PSes is required
-    if FLAGS.async or (FLAGS.smart and iteration_num%T == 0):
+    #If the asyncr protocol, one more round of exchanging gradients between PSes is required
+    if FLAGS.asyncr or (FLAGS.smart and iteration_num%T == 0):
       if FLAGS.log:
-        println("[PS] Starting the additional async block")
+        println("[PS] Starting the additional asyncronous block")
       service.pbuf_grad.gradients = aggr_res.tobytes()
       service.pbuf_grad.iter = iteration_num+0.5
       if FLAGS.bench:
@@ -471,14 +471,14 @@ with sess.as_default():
         println("[PS] Done feeding to tensor")
       if FLAGS.bench:
         final_up = time.time()
-      if FLAGS.async:
+      if FLAGS.asyncr:
         aggr_res,_ = sess.run([med_grad, apply_op], feed_dict=feed_dict)
       else:
         aggr_res,_ = sess.run([med_grad, apply_op_gather], feed_dict=feed_dict)
       if FLAGS.bench:
         print("[PS "+str(FLAGS.task_index)+"] Time to aggregate PS responses and apply them: " + str(time.time()-final_up))
       if FLAGS.log:
-        println("[PS] Done the additional async block")
+        println("[PS] Done the additional asyncronous block")
 
     if FLAGS.bench:
       println("[PS "+str(FLAGS.task_index)+"] time of one complete iteration: " + str(time.time() - iter_t))

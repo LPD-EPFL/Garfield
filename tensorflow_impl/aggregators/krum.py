@@ -20,7 +20,7 @@ import warnings
 
 import tools
 import native
-from . import _GAR, register, deprecated_native
+from . import _GAR, register
 
 # ---------------------------------------------------------------------------- #
 # Krum GAR class

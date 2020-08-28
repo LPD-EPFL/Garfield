@@ -18,7 +18,7 @@ import warnings
 
 import tools
 import native
-from . import _GAR, register, deprecated_native
+from . import _GAR, register
 
 # ---------------------------------------------------------------------------- #
 # Bulyan GAR class
@@ -26,15 +26,6 @@ from . import _GAR, register, deprecated_native
 class PYBulyanGAR(_GAR):
   """ Full-Python/(deprecated) native Bulyan of Multi-Krum GAR class.
   """
-
-  def _aggregate(self, gradients):
-    """ Aggregate the gradient using the associated (deprecated) native helper.
-    Args:
-      gradients Stacked list of submitted gradients, as a numpy array
-    Returns:
-      Aggregated gradient, as a numpy array
-    """
-    return deprecated_native.bulyan(gradients, self.__f, self.__s)
 
   def __init__(self, nbworkers, nbbyzwrks, args):
     warnings.warn("Python/native implementation of Bulyan has been deprecated in favor of the CO implementations", category=DeprecationWarning, stacklevel=3)

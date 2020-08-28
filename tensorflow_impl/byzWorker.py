@@ -44,13 +44,14 @@ import random
 import math
 import all_pb2, all_pb2_grpc
 import grpc
-from grpc_service_impl_slim import TrainMessageExchangeServicer
+from grpc_service_impl import TrainMessageExchangeServicer
 from concurrent import futures
 
 import collections
 import builtins as __builtin__
 
 import tensorflow as tf
+
 from tensorflow.python.client import timeline
 
 root = pathlib.Path(__file__).resolve().parent
@@ -140,7 +141,7 @@ parser.add_argument('--vanilla',
 type=bool,
 default=False,
 help='If True, the vanilla, non-byzantine case is executed. This is the baseline that we should compare with.')
-parser.add_argument('--async',
+parser.add_argument('--asyncr',
 type=bool,
 default=False,
 help='If True, the network is assumed to be asynchronous. Thus, only qourum is waited before proceeding.')
@@ -217,7 +218,7 @@ def tensor_to_protobuf(tensor):
   return tensor.tobytes()
 
 #Read gradients from PSes
-quorum = (2*num_byzps+3) if FLAGS.async else 1
+quorum = (2*num_byzps+3) if FLAGS.asyncr else 1
 grads = []
 #Special for the synchronous algorithm algorithm
 next_ps = random.randint(0, num_ps-1)
@@ -225,7 +226,7 @@ def read_gradients(quorum_smart=-1):
   global grads
   if FLAGS.log:
     println("worker: iteration num: "+str(iteration_num))
-  quorum = (2*num_byzps+3) if FLAGS.async else 1
+  quorum = (2*num_byzps+3) if FLAGS.asyncr else 1
   if iteration_num < 0:
     return [tf.placeholder(dtype=tf.float32, shape=(grad_length)) for _ in range(quorum)]
   grads = []
@@ -277,12 +278,12 @@ with tf.device('/'+device+':'+str(FLAGS.task_index%2)):
   #Initializing aggregators.....
   #Krum
   q_size = num_ps
-  if FLAGS.async:
+  if FLAGS.asyncr:
     q_size = (2*num_byzps) + 3
   krum_op = aggregators.instantiate("krum", q_size, num_byzps, None)
 
   #1) Read latest gradients from PSes...
-  if FLAGS.async:
+  if FLAGS.asyncr:
     grads_ps = [tf.placeholder(dtype=tf.float32, shape=(grad_length)) for _ in range(quorum)]
     last_grad = krum_op.aggregate(grads_ps)
     apply_op = optimizer.apply_gradients(helper.inflate(last_grad, helper.mapflat(flatmap)))
@@ -375,7 +376,7 @@ with sess.as_default():
         if FLAGS.bench:
           println("[Worker "+str(FLAGS.task_index)+"] time to read gradients: "+str(time.time() - read_t))
           apply_t = time.time()
-        if FLAGS.async:
+        if FLAGS.asyncr:
           feed_dict = dict([(grads_ps[i], up_grad[i]) for i in range(len(grads_ps))])
           sess.run([last_grad, apply_op], feed_dict=feed_dict)
         else:

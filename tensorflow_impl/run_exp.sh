@@ -34,7 +34,7 @@ while read p; do
 done < $worker_names
 workers=${workers:1} # remove first ','
 
-line="--nbbyzps $byzps --nbbyzwrk $byzwk --ps_hosts $pservers --worker_hosts $workers --max_steps $max_steps --batch $batch --eval_steps $eval_steps --$proto True --experiment $exp" # --async --smart --log --time_save --less_grad --vanilla
+line="--nbbyzps $byzps --nbbyzwrk $byzwk --ps_hosts $pservers --worker_hosts $workers --max_steps $max_steps --batch $batch --eval_steps $eval_steps --$proto True --experiment $exp" # --asyncr --smart --log --time_save --less_grad --vanilla
 
 #i=$((i-1))
 i=0

@@ -15,7 +15,7 @@
 
 import tensorflow as tf
 
-from . import _GAR, register, deprecated_native
+from . import _GAR, register
 
 # ---------------------------------------------------------------------------- #
 # Average with support for NaN coordinates GAR class
@@ -23,15 +23,6 @@ from . import _GAR, register, deprecated_native
 class AveragedMedianGAR(_GAR):
   """ Synchronous averaged-median with support for NaN coordinates GAR class.
   """
-
-  def _aggregate(self, gradients):
-    """ Aggregate the gradient using the associated deprecated_native helper.
-    Args:
-      gradients Stacked list of submitted gradients, as a numpy array
-    Returns:
-      Aggregated gradient, as a numpy array
-    """
-    return deprecated_native.averaged_median(gradients, self.__beta)
 
   def __init__(self, nbworkers, nbbyzwrks, args):
     self.__beta = nbworkers - nbbyzwrks
