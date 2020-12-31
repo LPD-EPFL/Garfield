@@ -1,0 +1,33 @@
+digraph multibuffer {
+    E  [label="empty", shape=Msquare, width=1]
+    W_ [label="writing", shape=square, width=1]
+    W  [label="written", shape=square, width=1]
+    R_ [label="readable", shape=square, width=1]
+    R  [label="reading", shape=square, width=1]
+
+    C  [label="commit?", shape=diamond, width=1]
+    D  [label="consume?", shape=diamond, width=1]
+
+    E->E   [label="R\n(waitread)"]
+    E->W_  [label="W"]
+
+    W_->W_ [label="R\n(waitread)"]
+    W_->W_ [label="W\n(waitwrite)"]
+    W_->C  [label="W*"]
+    C->W   [label="yes\n(++offset)\n(wakeread [all, one][consume?])"]
+    C->E   [label="no"]
+
+    W->D   [label="R\n(++readers)"]
+    D->R_  [label="no"]
+    D->R   [label="yes"]
+    W->W_  [label="W"]
+
+    R_->R_ [label="R\n(++readers)"]
+    R_->R_ [label="R*\n(--readers)"]
+    R_->R  [label="W\n(readers > 0)\n(waitwrite)"]
+    R_->W_ [label="W\n(readers == 0)"]
+
+    R->R   [label="R\n(waitread)"]
+    R->E   [label="R*\n(--readers == 0)\n(wakewrite one)"]
+    R->R   [label="W\n(waitwrite)"]
+}
