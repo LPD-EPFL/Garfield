@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+service MessageExchange {
+
+  rpc GetModel (Request) returns (Model) {}
+  rpc SendModel (Model) returns (Response) {}
+  rpc GetGradient (Request) returns (Gradients) {}
+  rpc SendGradient (Gradients) returns (Response) {}
+
+}
+
+message Request {
+   int32 iter = 1;
+   string job = 2;
+   int32 req_id = 3;
+}
+
+message Response {
+   int32 iter = 1;
+   string job = 2;
+   int32 req_id = 3;
+}
+
+message Model {
+   bytes model = 1;
+   bool init = 2;
+   int32 iter = 3;
+}
+
+message Gradients {
+   bytes gradients = 1;
+   float iter = 2;
+}
