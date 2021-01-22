@@ -1,7 +1,7 @@
 # Garfield-TF
 The implementation of the Garfield library on TensorFlow. [Garfield](https://arxiv.org/abs/2010.05888) gives support for building Byzantine-resilient machine learning applications.
 
-Code authors: Arsany Guirguis, Anton Ragot, and Jérémy Plassmann.
+Code authors: Arsany Guirguis, Anton Ragot, Jérémy Plassmann and Sébastien Rouault.
 
 ## Requirements
 Garfield was tested with the following versions
