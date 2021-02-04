@@ -3,7 +3,6 @@
 The implementation of the Garfield library on PyTorch. [Garfield](https://arxiv.org/abs/2010.05888) gives support for 
 building Byzantine-resilient machine learning applications.
 
-Code authors: Arsany Guirguis and Sebastien Rouault.
 
 ## Requirements
 Garfield was tested with the following versions
