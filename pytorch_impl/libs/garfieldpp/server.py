@@ -81,7 +81,7 @@ class Server:
         if world_size > 1:
             self.workers_types, self.workers_rref = self.get_rrefs(wrk_base_name,0,num_workers, True)
         self.num_ps = num_ps
-        self.model = tools.select_model(model, torch.device("cpu:0"))	#We should always put the model on CPU because RPC is not supported on GPUs
+        self.model = tools.select_model(model, torch.device("cpu:0"), dataset)	#We should always put the model on CPU because RPC is not supported on GPUs
         manager = DatasetManager(dataset, batch*num_workers, 1, 2, 1)			#The parameters actually are dummy
         self.test_set = manager.get_test_set()
         self.train_set = manager.get_train_set()

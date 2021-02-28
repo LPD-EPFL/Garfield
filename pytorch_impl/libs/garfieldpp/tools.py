@@ -56,11 +56,12 @@ def select_loss(loss_fn):
         print("The selected loss function is undefined, available losses are: ", losses.keys())
         raise
   
-def select_model(model, device):
+def select_model(model, device, dataset):
     """ Select model to train
     Args
     model    model name required to be trained
     device    device to put model on (cuda or cpu)
+    dataset     dataset name to be used for training
     """
     models = {'convnet':Net,
 		'cifarnet':Cifarnet,
@@ -83,8 +84,14 @@ def select_model(model, device):
 		'senet18': SENet18,
 		'efficientnetb0': EfficientNetB0,
 		'regnetx200': RegNetX_200MF}
+    num_classes_dict={"cifar10":10, "cifar100":100, "mnist":10, "imagenet":1000}
+    if dataset in num_classes_dict.keys():
+        num_classes = num_classes_dict[dataset]
+    else:
+        print("The specified dataset is undefined, available datasets are: ", num_classes_dict.keys())
+        raise
     if model in models.keys():
-        model = models[model]()
+        model = models[model](num_classes=num_classes)
     else:
         print("The specified model is undefined, available models are: ", models.keys())
         raise

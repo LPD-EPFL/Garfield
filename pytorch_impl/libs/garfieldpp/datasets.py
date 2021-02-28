@@ -126,7 +126,7 @@ class DatasetManager(object):
             return datasets.MNIST(
               homedir+'/data',
               train=train,
-              download=train,
+              download=True,
               transform=transforms.Compose([
                  transforms.ToTensor(),
                  transforms.Normalize((0.1307, ), (0.3081, ))
@@ -155,7 +155,7 @@ class DatasetManager(object):
               return datasets.CIFAR10(
                 homedir+'/data',
                 train=False,
-                download=False,
+                download=True,
                 transform=transforms_test)
 
 #            return datasets.CIFAR10(
