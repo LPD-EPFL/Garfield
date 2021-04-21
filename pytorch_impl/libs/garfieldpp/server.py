@@ -65,8 +65,8 @@ class Server:
         batch	       the batch size per worker; used to build the computation graph
         model          the name of the NN model to be used
         dataset        the name of the dataset to be used for training
-        optimizer      the name of the optimizaer used by the server
-        args, kwargs   additional arguments to be passed to the optimizaer constructor
+        optimizer      the name of the optimizer used by the server
+        args, kwargs   additional arguments to be passed to the optimizer constructor
         """
         if torch.cuda.device_count() > 0:
             self.device = torch.device("cuda")

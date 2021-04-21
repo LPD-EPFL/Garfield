@@ -10,7 +10,7 @@ lr=0.2
 
 pwd=`pwd`
 
-common="CUDAHOSTCXX=/usr/bin/gcc-5 python3 $pwd/cent_trainer.py --num_iter $iter --dataset $dataset --model $model --batch $batch --loss $loss"
+common="CUDAHOSTCXX=/usr/bin/gcc-5 python3 $pwd/trainer.py --num_iter $iter --dataset $dataset --model $model --batch $batch --loss $loss"
 common="$common --optimizer sgd --opt_args '{\"lr\":\"$lr\",\"momentum\":\"0.9\",\"weight_decay\":\"0.0005\"}'"
 cmd="$common"
 ssh $node "$cmd" < /dev/tty &

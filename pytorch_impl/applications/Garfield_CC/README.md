@@ -46,7 +46,7 @@ optional arguments:
 
   1. Create two files, `servers` and `workers`, and fill them with hostnames of nodes that should contribute to the experiment. The first file, `servers` should contain (at least) one line (corresponding to the number of hosts to be used as servers), where the second file, `workers` should contain the names of the hosts that would contribute as workers in the distributed setup.
 
-  2. Run `./run_exp.sh`. Note that the parameters to be given to `tranier.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
+  2. Run `./run_exp.sh`. Note that the parameters to be given to `trainer.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
 
   3. Run `./kill.sh` to clean up.
  

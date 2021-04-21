@@ -80,7 +80,7 @@ def main():
     for i, ipport in enumerate(ipport_workers):
         print(f"Worker {str(i)} - {ipport} :")
         
-        print("Strategy (average):")
+        print("Strategy (median):")
         strategy = input()
         if strategy == "":
             strategy = "Median"

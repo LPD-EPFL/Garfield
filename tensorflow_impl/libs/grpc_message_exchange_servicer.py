@@ -44,7 +44,7 @@ class MessageExchangeServicer(garfield_pb2_grpc.MessageExchangeServicer):
                 - model_weights: 
         """
 
-        self.model_wieghts_history = [model_weights]
+        self.model_weights_history = [model_weights]
         self.gradients_history = []
 
 
@@ -54,11 +54,11 @@ class MessageExchangeServicer(garfield_pb2_grpc.MessageExchangeServicer):
         job = request.job
         req_id = request.req_id
 
-        while iter >= len(self.model_wieghts_history):
+        while iter >= len(self.model_weights_history):
             time.sleep(0.001)
         
-        serialized_model = self.model_wieghts_history[iter].tobytes()
-        #serialized_model = tools.weights_to_bytes(self.model_wieghts_history[iter])
+        serialized_model = self.model_weights_history[iter].tobytes()
+        #serialized_model = tools.weights_to_bytes(self.model_weights_history[iter])
         return garfield_pb2.Model(model=serialized_model,
                                   init=True,
                                   iter=iter)
@@ -71,7 +71,7 @@ class MessageExchangeServicer(garfield_pb2_grpc.MessageExchangeServicer):
         raise NotImplementedError('Method not implemented!')
 
     def GetGradient(self, request, context):
-        """Get the graidents of a specific iteration stored on the server."""
+        """Get the gradients of a specific iteration stored on the server."""
         iter = request.iter
         job = request.job
         req_id = request.req_id

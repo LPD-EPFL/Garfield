@@ -40,6 +40,6 @@ optional arguments:
 
   1. Create two files, `servers` and `workers`, and fill them with hostnames of nodes which should contribute to the experiment. The first file, `servers` should contain only one line, i.e., one host, where the second file, `workers` should contain as many lines as the number of hosts (each line should contain one hostname).
 
-  2. Run `./run_exp.sh`. Note that the parameters to be given to `tranier.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
+  2. Run `./run_exp.sh`. Note that the parameters to be given to `trainer.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
 
   3. Run `./kill.sh` to clean up.

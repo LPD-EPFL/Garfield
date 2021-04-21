@@ -41,6 +41,6 @@ optional arguments:
 
   1. Create one file, `nodes`, and fill it with hostnames of nodes which should contribute to the experiment: one line for each hostname.
 
-  2. Run `./run_exp.sh`. Note that the parameters to be given to `tranier.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
+  2. Run `./run_exp.sh`. Note that the parameters to be given to `trainer.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
 
   3. Run `./kill.sh` to clean up.
