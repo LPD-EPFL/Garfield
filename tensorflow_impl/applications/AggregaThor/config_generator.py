@@ -71,10 +71,10 @@ def main():
     for i, ipport in enumerate(ipport_workers):
         print(f"Worker {str(i)} - {ipport} :")
         
-        print("Strategy (average):")
+        print("Strategy (Average):")
         strategy = input()
         if strategy == "":
-            strategy = "average"
+            strategy = "Average"
 
         print("Attack (None):")
         attack = input()
@@ -95,10 +95,10 @@ def main():
     for i, ipport in enumerate(ipport_ps):
         print(f"PS {str(i)} - {ipport} :")
         
-        print("Strategy (average):")
+        print("Strategy (Average):")
         strategy = input()
         if strategy == "":
-            strategy = "average"
+            strategy = "Average"
 
         print("Attack (None):")
         attack = input()
