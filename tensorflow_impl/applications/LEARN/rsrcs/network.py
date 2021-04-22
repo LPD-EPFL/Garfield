@@ -54,10 +54,10 @@ class Network:
         return self._data['task']['index']
 
     def get_model_strategy(self):
-        return self._data['task']['strategy_model']
+        return self._data['task']['strategy']
 
     def get_gradient_strategy(self):
-        return self._data['task']['strategy_gradient']
+        return self._data['task']['strategy']
 
     def get_my_attack(self):
         return self._data['task']['attack']

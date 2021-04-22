@@ -32,13 +32,13 @@
 
 import argparse
 
-from network import Network
-from libs.Worker import Worker
-from libs.PS import PS
-from libs.ByzWorker import ByzWorker
+from rsrcs.network import Network
+from libs.worker import Worker
+from libs.ps import PS
+from libs.byz_worker import ByzWorker
 from libs import tools
 
-from aggregator_tf.aggregator import Aggregator_tf
+from rsrcs.aggregator_tf.aggregator import Aggregator_tf
 
 import time
 import os
