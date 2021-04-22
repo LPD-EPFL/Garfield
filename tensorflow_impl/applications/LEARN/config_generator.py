@@ -69,8 +69,8 @@ def main():
         print("There are more workers than available nodes.")
         exit(0)
 
-    ipport_workers = ipports[:nb_servers]
-    ipport_ps = ipports[:nb_servers]
+    ipport_workers = [ipport[0] for ipport in ipports[:nb_servers]]
+    ipport_ps = [ipport[1] for ipport in ipports[:nb_servers]]
     cluster = {
             "worker": ipport_workers,
             "ps": ipport_ps
