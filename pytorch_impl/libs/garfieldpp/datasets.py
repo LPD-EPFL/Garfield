@@ -45,7 +45,7 @@ class Partition(object):
     """ Dataset-like object, but only access a subset of it. """
 
     def __init__(self, data, index):
-       """ Constructor of Partiotion Object
+       """ Constructor of Partition Object
            Args
            data		dataset needs to be partitioned
            index	indices of datapoints that are returned
@@ -72,7 +72,7 @@ class DataPartitioner(object):
         """ Constructor of dataPartitioner object
 	    Args
 	    data	dataset to be partitioned
-	    size	Array of fractions of each partition. Its contents should sum to 1
+	    sizes	Array of fractions of each partition. Its contents should sum to 1
 	    seed	seed of random generator for shuffling the data
 	"""
         self.data = data
@@ -102,9 +102,10 @@ class DatasetManager(object):
         """ Constrctor of DatasetManager Object
 	    Args
 		dataset		dataset name to be used
-		batch		minibatch size to be employed by each worker
+		minibatch	minibatch size to be employed by each worker
 		num_workers	number of works employed in the setup
-		rabk		rank of the current worker
+		size		FIXME
+		rank		rank of the current worker
 	"""
         if dataset not in datasets_list:
             print("Existing datasets are: ", datasets_list)

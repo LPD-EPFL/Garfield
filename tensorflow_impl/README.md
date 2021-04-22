@@ -133,4 +133,4 @@ arguments:
 
 ## Requirements
 
-All requirements are listed in the [requirement file](https://github.com/LPD-EPFL/Garfield_TF/blob/main/requirements.txt)
+All requirements are listed in the [requirement file](https://github.com/LPD-EPFL/Garfield/blob/master/tensorflow_impl/requirements.txt)

@@ -57,16 +57,16 @@ future.
    The playground inside is useful for trying out new stuff with the library. Once a complete application is 
 implemented, it must be moved to the `applications` directory.
 
-## Useuful practical general notes
+## Useful practical general notes
 1. The repo should be cloned on all nodes contributing to the experiment. Also, all nodes should have the same `nodes` file (NFS would be a good choice for that purpose), which can be found in the running application directory.
 
 2. The bash scripts (`run.sh` and `kill.sh`) require **password-less** ssh access among machines contributing to the distributed setup.
 
 3. Our experiments so far are all done on [Grid5000](https://www.grid5000.fr). The GPU-based experiments are held on the *Lille* site.
 
-4. Using inception requires 299*299 input -- see `libs/garfield/datasets.py`
+4. Using inception requires 299*299 input -- see `libs/garfieldpp/datasets.py`
 
-5. Using inception requires passing output.logits to loss() -- see `libs/garfield/worker.py`
+5. Using inception requires passing output.logits to loss() -- see `libs/garfieldpp/worker.py`
 
 6. Use scipy v1.3.3 for faster loading of inception network
 

@@ -48,11 +48,11 @@ class Worker:
     def __init__(self, rank, world_size, num_workers, batch_size, model, dataset, loss):
         """ Constructor of worker Object
         Args
+        rank           unique ID of this worker node in the deployment
         world_size     total number of nodes in the deployment
         num_workers    total number of workers in the deployment
-        rank           unique ID of this worker node in the deployment
         batch_size     size of the batch to be used for training
-        model          the name of the NN model to be used
+        model          the name of the NN model to be used   FIXME: not used?
         dataset        the name of the dataset to be used for training
         loss           the name of the loss function to be applied
         """
@@ -72,8 +72,8 @@ class Worker:
     def compute_gradients(self, iter_num, model):
         """ compute gradients using the submitted model and a local batch size
         Args
-        model        the model state using which training should happen
         iter_num     the number of current iteration; this determines the local batch to be used for training
+        model        the model state using which training should happen
         """
         with torch.autograd.profiler.profile(enabled=False) as prof:
             #First, fetch the correct batch from the training set, using iter_num

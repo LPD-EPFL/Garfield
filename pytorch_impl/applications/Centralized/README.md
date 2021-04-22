@@ -28,6 +28,6 @@ optional arguments:
 
 ```
 
-* We provide `run.sh` as an example of how to use the provided software. The interested user can write whatever `run` script of choice. Note that the parameters to be given to `tranier.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
+* We provide `run.sh` as an example of how to use the provided software. The interested user can write whatever `run` script of choice. Note that the parameters to be given to `trainer.py` are hard-coded in this script file. Users should feel free to change them to their favorable choices.
 
 * Example: Run `./run.sh localhost`.
