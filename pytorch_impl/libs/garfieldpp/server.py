@@ -233,7 +233,10 @@ class Server:
         """
         correct = 0
         total = 0
-        model_cpy = copy.deepcopy(self.model).cuda()
+        model_cpy = copy.deepcopy(self.model)
+        if torch.cuda.is_available():
+            model_cpy = model_cpy.cuda()
+
         model_cpy.eval()
         with torch.no_grad():
           for idx, (inputs, targets) in enumerate(self.test_set):
