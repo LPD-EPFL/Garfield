@@ -1,18 +1,17 @@
 #!/bin/bash
 
-rm config/*
-uniq $OAR_NODEFILE | python3 config_generator.py
+dir=config
 
+if [[ ! -e $dir ]]; then
+    echo "Creating $dir folder" 1>&2
+    mkdir $dir
+else
+    echo "$dir folder already exists, removing previous configuration" 1>&2
+    rm $dir/*
+fi
+
+python3 config_generator.py
 
 for filename in config/*; do
-    IP=$(echo $filename | cut -c18- | tr -d '\n')
-    
-    oarsh $IP python3 Garfield_TF/applications/MSMW/trainer.py \
-        --config Garfield_TF/applications/MSMW/$filename \
-        --log True         \
-        --max_iter 2000    \
-        --batch_size 64    \
-        --dataset cifar10  \
-        --nbbyzwrks 3      \
-        --model VGG &
+    xterm -hold -e python3 trainer.py --config $filename --log True --max_iter 1000 --batch_size 126 & 
 done

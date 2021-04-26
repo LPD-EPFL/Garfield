@@ -64,14 +64,14 @@ def main():
         w.start()
         model_aggregator = Aggregator_tf(n.get_model_strategy(), len(n.get_all_workers()), FLAGS.nbbyzwrks, FLAGS.native)
 
-        for iter in range(FLAGS.max_iter):
+        for iter in range(FLAGS.max_iter+1):
             models = w.get_models(iter)
             aggregated_model = model_aggregator.aggregate(models)
             w.write_model(aggregated_model)
             loss, grads = w.compute_gradients(iter)
             w.commit_gradients(grads)
 
-        w.wait_until_termination()
+        w.stop(1)
 
     elif n.get_task_type() == 'ps':
         p = PS(n, FLAGS.log, FLAGS.dataset, FLAGS.model, FLAGS.batch_size, FLAGS.nbbyzwrks)
@@ -89,11 +89,11 @@ def main():
             p.commit_model(model)
             
             tools.training_progression(FLAGS.max_iter, iter, accuracy)
-            if iter%200 == 0:
+            if iter%50 == 0:
                 accuracy = p.compute_accuracy()
 
         print("\nTraining done!")
-        p.wait_until_termination()
+        p.stop(1)
     else:
         print("Unknown task type, please check TF_CONFIG file")
         exit(0)

@@ -107,8 +107,12 @@ class Server:
         if self.log:
             print("Starting on port: " + str(self.port))
 
-    def wait_until_termination(self):
-        self.server.wait_for_termination()
+    def stop(self, grace):
+        """ Stops the gRPC server. """
+
+        self.server.stop(grace)
+        if self.log:
+            print("Stopping server")
 
     def get_models(self, iter):
         """ Get all the models of the parameter servers. 

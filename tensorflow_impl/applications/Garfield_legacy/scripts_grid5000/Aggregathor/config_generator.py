@@ -35,20 +35,32 @@ import sys
 
 
 def main():
-    
+
+    ipports = [ip[:-1] + ":5000" for ip in sys.stdin]
+    sys.stdin = open("/dev/tty")
+
     ipport_workers = []
     ipport_ps = []
-    
+    tasks_workers = []
+    tasks_ps = []
+
     print("How many workers ?")
     nb_workers = int(input())
 
-    if nb_workers < 1:
-        print("There should be at least one worker!")
+    if nb_workers > len(ipports):
+        print("There are more workers than available nodes.")
         exit(0)
 
-    ipports = ["127.0.0.1:" + str(5000 + id) for id in range(nb_workers + 1)]
-    ipport_ps = [ipports[0]]
-    ipport_workers = ipports[1:nb_workers+1]
+    
+   
+    nb_ps = 1
+
+    if nb_ps > len(ipports) - nb_workers:
+        print("There are more ps than available nodes.")
+        exit(0)
+
+    ipport_workers = ipports[:nb_workers]
+    ipport_ps = ipports[nb_workers:nb_workers+nb_ps]
     cluster = {
         "worker": ipport_workers,
         "ps": ipport_ps
@@ -59,55 +71,42 @@ def main():
     for i, ipport in enumerate(ipport_workers):
         print(f"Worker {str(i)} - {ipport} :")
         
-        print("Strategy (Average):")
-        strategy_g = input()
-        if strategy_g == "":
-            strategy_g = "Average"
+        print("Strategy (average):")
+        strategy = input()
+        if strategy == "":
+            strategy = "average"
 
         print("Attack (None):")
         attack = input()
         if attack == "":
             attack = "None"
+        task = {"type": "worker", "index": i, "strategy": strategy, "attack": attack}
 
-        task = {"type": "worker",
-                "index": i, 
-                "strategy_model": "Average", # Fixed to average as it will not be used
-                "strategy_gradient": strategy_g,
-                "attack": attack
-               }
-
-        f = open("config/TF_CONFIG_W" + str(i), "w+")
+        f = open("config/TF_CONFIG_" + ipport.split(':')[0], "w")
         f.write(json.dumps({
             "cluster": cluster,
             "task": task
         }))
         f.close
 
-    print("Let's configure the parameter server !")
+    print("Let's configure the parameter servers !")
 
     
     for i, ipport in enumerate(ipport_ps):
         print(f"PS {str(i)} - {ipport} :")
-    
-
-        print("Strategy (Average):")
-        strategy_g = input()
-        if strategy_g == "":
-            strategy_g = "Average"
+        
+        print("Strategy (average):")
+        strategy = input()
+        if strategy == "":
+            strategy = "average"
 
         print("Attack (None):")
         attack = input()
         if attack == "":
             attack = "None"
+        task = {"type": "ps", "index": i, "strategy": strategy, "attack": attack}
 
-        task = {"type": "ps",
-                "index": i, 
-                "strategy_model": "Average", # Fixed to average as it will not be used
-                "strategy_gradient": strategy_g,
-                "attack": attack
-               }
-
-        f = open("config/TF_CONFIG_PS" + str(i), "w+")
+        f = open("config/TF_CONFIG_" + ipport.split(':')[0], "w")
         f.write(json.dumps({
             "cluster": cluster,
             "task": task
