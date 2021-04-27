@@ -1,52 +1,52 @@
 # Garfield-TF
+
 The implementation of the Garfield library on TensorFlow. [Garfield](https://arxiv.org/abs/2010.05888) gives support for building Byzantine-resilient machine learning applications.
 
-
 ## Requirements
+
 Garfield was tested with the following versions
-* grpcio (1.33.2)
-* numpy (1.19.1)
-* python (3.8)
-* tensorflow (2.3.1)
-* tensorflow-datasets (4.0.1)
+
+- grpcio (1.33.2)
+- numpy (1.19.1)
+- python (3.8)
+- tensorflow (2.3.1)
+- tensorflow-datasets (4.0.1)
 
 ## Structure
 
-* `libs/`
+- `libs/`
 
-   The main components of the library, enabling easy sharing amongst the applications.
+  The main components of the library, enabling easy sharing amongst the applications.
 
-* `applications/`
+- `applications/`
 
-   Examples on applications that can be built by Garfield. This directory can be enriched by other applications in the future.
+  Examples of applications that can be built by Garfield. This directory can be enriched by other applications in the future.
 
-   Each subdirectory corresponds to one application (*SSMW, MMSW, LEARN*).
+  Each subdirectory corresponds to one application (_SSMW, MMSW, LEARN_).
 
-   Each application subdirectory should contain:
-   
-   1. _Symlinks_ to the `libs/` and `rsrcs/` directories.
+  Each application subdirectory should contain:
 
-   2. `run.sh`: an example script to automatically run the corresponding application on multiple nodes.
+  1.  _Symlinks_ to the `libs/` and `rsrcs/` directories.
 
-   3. `config_generator.py`: python script that creates the configuration files with the entry of the user.
+  2.  `run.sh`: an example script to automatically run the corresponding application on multiple nodes.
 
-   4. `trainer.py`: the implementation of the corresponding application using the Garfield library.
+  3.  `config_generator.py`: python script that creates the configuration files with the entry of the user.
 
-   5. `config/`: directory containing the configuration files of the cluster.
+  4.  `trainer.py`: the implementation of the corresponding application using the Garfield library.
 
-* `rsrcs/`
+  5.  `config/`: directory containing the configuration files of the cluster.
 
-   Other reusable resources.
+- `rsrcs/`
 
-
+  Other reusable resources.
 
 ## Usage
 
-In order to run a process, you need to have a `TF_CONFIG` file for _each_ process in the cluster.
+To run a process, you need to have a `TF_CONFIG` file for _each_ process in the cluster.
 
 ### Setting TF_CONFIG file
 
-This file inform a process of the different nodes in the cluster, as well as its task.
+This file informs a process of the different nodes in the cluster, as well as its task.
 
 ```
 {
@@ -67,7 +67,7 @@ This file inform a process of the different nodes in the cluster, as well as its
 
 ##### Cluster declaration:
 
-This part needs to be the same for all config file in the cluster.
+This part needs to be the same for all config files in the cluster.
 
 ```
 "cluster": {
@@ -79,23 +79,24 @@ This part needs to be the same for all config file in the cluster.
 ##### Task declaration:
 
 This part must be unique for each process. You need to define if your process is a `ps` or a `worker`. The index informs the position of the process's ip in the IP:PORT list (starting at 0).
+
 ```
 "task": {
     "type": "ps",
     "index": 0,
-    "strategy_gradient": "Average", 
-    "strategy_model": "Median", 
-    "attack": "None"    
+    "strategy_gradient": "Average",
+    "strategy_model": "Median",
+    "attack": "None"
 }
 ```
 
 ##### Aggregation and attacks:
 
-Aggregations and attacks can only be chosen from a specific list. Note that every name is case sensitive.
+Aggregations and attacks can only be chosen from a specific list. Note that every name is case-sensitive.
 
-***Aggregation*** : Average, Median, Krum, Brute, Aksel, Condense, Bulyan.
+**_Aggregation_** : Average, Median, Krum, Brute, Aksel, Condense, Bulyan.
 
-***Attacks*** : Random, Reverse, PartialDrop, LittleIsEnough, FallEmpires.
+**_Attacks_** : Random, Reverse, PartialDrop, LittleIsEnough, FallEmpires.
 
 ### Starting a process
 
@@ -108,7 +109,7 @@ usage: trainer.py [-h] --config CONFIG [--log] [--max_iter MAX_ITER]
                  [--batch_size BATCH_SIZE]
                  [--nbbyzwrks NBBYZWRKS]
                  [--native]
-                 
+
 arguments:
   -h, --help                show this help message and exit
   --config CONFIG           config file location.
@@ -122,14 +123,15 @@ arguments:
 
 ```
 
-## Useuful practical general notes
+## Useful practical general notes
+
 1. The repo should be cloned on all nodes contributing to the experiment.
 
 2. The bash scripts (`run.sh`) require **password-less** ssh access among machines contributing to the distributed setup.
 
-3. `run.sh` first runs the configuration file generator and then start the processes on the different machines. The distributed setup is assumed to share the file system.
+3. `run.sh` first runs the configuration file generator and then starts the processes on the different machines. The distributed setup is assumed to share the file system.
 
-4. Our experiments so far are all done on [Grid5000](https://www.grid5000.fr). The GPU-based experiments are held on the *Lille* site.
+4. Our experiments so far are all done on [Grid5000](https://www.grid5000.fr). The GPU-based experiments are held on the _Lille_ site.
 
 ## Requirements
 
