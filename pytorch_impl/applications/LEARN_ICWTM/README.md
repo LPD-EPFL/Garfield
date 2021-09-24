@@ -1,6 +1,6 @@
-# LEARN
+# LEARN_ICWTM
 
-* Fully decentralized setup.
+* Fully decentralized setup, yet with using coordinate-wise trimmed-mean as a GAR.
 
 * Deployment requires running `trainer.py` on multiple machines.
 
