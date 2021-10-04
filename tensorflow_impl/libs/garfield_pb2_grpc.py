@@ -4,6 +4,20 @@ import grpc
 
 from . import garfield_pb2 as garfield__pb2
 
+"""
+        GRPC:
+                gRPC is a modern open source high performance Remote Procedure Call (RPC) framework that can run in any environment. 
+                It can efficiently connect services in and across data centers with pluggable support for load balancing, tracing, health checking and authentication.
+                It is also applicable in last mile of distributed computing to connect devices, mobile applications and browsers to backend services.
+"""
+
+"""
+        Remote Procedure Call:
+        Remote Procedure Call (RPC) is a protocol that one program can use to request
+        a service from a program located in another computer on a network without having 
+        to understand the network's details. RPC is used to call other processes on the remote systems
+        like a local system. A procedure call is also sometimes known as a function call or a subroutine call.
+"""
 
 class MessageExchangeStub(object):
     """Missing associated documentation comment in .proto file."""
@@ -13,6 +27,14 @@ class MessageExchangeStub(object):
 
         Args:
             channel: A grpc.Channel.
+        """
+
+        """
+                Unary Unary: 
+                Unary RPCs where the client sends a single request to the server and gets a single response back,
+                just like a normal function call. ... 
+                The client reads from the returned stream until there are no more messages.
+                gRPC guarantees message ordering within an individual RPC cal
         """
         self.GetModel = channel.unary_unary(
                 '/MessageExchange/GetModel',

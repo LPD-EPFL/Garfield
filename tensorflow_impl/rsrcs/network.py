@@ -54,10 +54,10 @@ class Network:
         return self._data['task']['index']
 
     def get_model_strategy(self):
-        return self._data['task']['strategy']
+        return self._data['task']['strategy_model']
 
     def get_gradient_strategy(self):
-        return self._data['task']['strategy']
+        return self._data['task']['strategy_gradient']
 
     def get_my_attack(self):
         return self._data['task']['attack']
@@ -68,6 +68,19 @@ class Network:
             If my server is a PS as well, it is excluded from the list
         """
         return self._ps.copy()
+
+    def get_other_ps(self):
+        if self.get_task_type() != "worker":
+            return self._ps.copy()[1:]
+        else:
+            return self._ps.copy()
+
+    def get_other_workers(self):
+        if self.get_task_type() == "worker":
+            return self._ps.copy()[1:]
+        else:
+            return self._ps.copy()
+
 
     def get_all_other_worker(self):
         """
@@ -81,10 +94,10 @@ class Network:
 
     def get_my_node(self):
         index = self._data['task']['index']
-        if self.get_task_type() == "ps":
-            return self._ps[index]
-        elif self.get_task_type() == "worker":
+        if self.get_task_type() == "worker":
             return self._worker[index]
+        else:
+            return self._ps[index]
 
     def get_my_port(self):
         return self.get_my_node().split(':')[1]

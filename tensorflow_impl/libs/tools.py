@@ -32,6 +32,8 @@
 
 import numpy as np
 import tensorflow as tf
+import os
+import jwt
 import sys
 import grpc
 from . import garfield_pb2_grpc
@@ -46,6 +48,12 @@ def bytes_to_chunks(s, size=4194290):
     """
     return [s[i:i+size] for i in range(0, len(s), size)]
 
+
+
+def load_credential_from_file(filepath):
+    real_path = os.path.join(os.path.dirname(__file__), filepath)
+    with open(real_path, 'rb') as f:
+        return f.read()
 
 
 def model_to_bytes(model):
@@ -152,10 +160,75 @@ def set_connection(host):
         returns:
             Stub
     """
-
-    channel = grpc.insecure_channel(host, options=[('grpc.max_send_message_length', -1), ('grpc.max_receive_message_length', -1)])
+    channel = grpc.insecure_channel('localhost' + host[-5:], options=[('grpc.max_send_message_length', -1)
+                                    , ('grpc.max_receive_message_length', -1)])
     stub = garfield_pb2_grpc.MessageExchangeStub(channel)
     
+    return stub
+
+class AuthGateway(grpc.AuthMetadataPlugin):
+    """
+        class grpc.AuthMetadataPlugin[source]
+       
+        A specification for custom authentication.
+
+        __call__(context, callback)[source]
+        Implements authentication by passing metadata to a callback.
+
+        This method will be invoked asynchronously in a separate thread.Parameters
+        context – An AuthMetadataContext providing information on the RPC that the plugin is being called to authenticate.
+
+        callback – An AuthMetadataPluginCallback to be invoked either synchronously or asynchronously.
+    """
+    def __init__(self , private_key , role):
+        self.private_key = private_key
+        self.role = role
+
+
+    def __call__(self, context, callback):
+
+        """Implements authentication by passing metadata to a callback.
+
+        Implementations of this method must not block.
+
+        Args:
+          context: An AuthMetadataContext providing information on the RPC that
+            the plugin is being called to authenticate.
+          callback: An AuthMetadataPluginCallback to be invoked either
+            synchronously or asynchronously.
+        """
+        print(context)
+        encoded = jwt.encode({"request": context.method_name}, (self.private_key).decode("utf-8") , algorithm="RS256")
+        # decoded = jwt.decode(encoded, (_credentials.CLIENT_CERTIFICATE_PUBLIC_KEY).decode("utf-8"), algorithms="RS256")
+        # print(decoded)
+        # decoded = jwt.decode(encoded, _credentials.CLIENT_CERTIFICATE_PUBLIC_KEY, algorithms=["RS256"])
+
+        signature = context.method_name[::-1]
+        callback((("role" , self.role) , ("locked_role", encoded),), None)
+
+
+def set_secure_connetion(host , root_certificate , private_key , certificate_chain):
+    """
+        Set the secure connection of specific server.
+
+        args:
+            - hosts:  string of the form "ip:port"
+            - role :  role and access of the hosts
+        
+        returns:
+            - messageExchangeStub
+        
+    """
+    
+    channel_credential = grpc.ssl_channel_credentials(
+        root_certificates = root_certificate,
+        private_key = private_key,
+        certificate_chain = certificate_chain
+    )
+    
+
+    channel = grpc.secure_channel('localhost' + host[-5:], channel_credential)
+    stub = garfield_pb2_grpc.MessageExchangeStub(channel)
     return stub
 
 

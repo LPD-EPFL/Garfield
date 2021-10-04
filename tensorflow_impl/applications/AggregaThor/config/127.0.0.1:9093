@@ -1,0 +1,1 @@
+{"cluster": {"worker": ["127.0.0.1:9093" ,"127.0.0.1:9090", "127.0.0.1:9091"], "ps": ["127.0.0.1:9092"]}, "task": {"type": "worker", "index": 0, "strategy_model": "Average", "strategy_gradient": "Average", "attack": "None"}}

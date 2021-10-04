@@ -32,31 +32,40 @@
 
 import time
 import grpc
+import numpy as np
+import sys
 from . import garfield_pb2
 from . import garfield_pb2_grpc
 from . import tools
+import pickle
 from OpenSSL import crypto
 
-
-class MessageExchangeServicer(garfield_pb2_grpc.MessageExchangeServicer):
+class SecureMessageExchangeServicerModelServer(garfield_pb2_grpc.MessageExchangeServicer):
 
     def __init__(self, model_weights):
+        # print("SecureMessageExchangeServicerModelServer activated")
         """
             args: 
                 - model_weights: 
+                - workers : list of workers' port
+                - model_server : model server's port
+                - worker_server : worker server's port
         """
 
         self.model_wieghts_history = [model_weights]
-        self.gradients_history = []
+        self.partial_gradient_different = []
+
+
 
 
     def GetModel(self, request, context):
-        
         """Get the model weights of a specific iteration stored on the server."""
+        # print("in the SecureMessageExchangeServicerModelServer , get Model")
+
         iter = request.iter
         job = request.job
         req_id = request.req_id
-
+        # print("iteration" , iter)
         while iter >= len(self.model_wieghts_history):
             time.sleep(0.001)
         
@@ -74,24 +83,46 @@ class MessageExchangeServicer(garfield_pb2_grpc.MessageExchangeServicer):
         raise NotImplementedError('Method not implemented!')
 
     def GetGradient(self, request, context):
+        # print("in the SecureMessageExchangeServicerModelServer , get gradeint")
         """Get the graidents of a specific iteration stored on the server."""
         iter = request.iter
         job = request.job
         req_id = request.req_id
 
-        while iter >= len(self.gradients_history):
-            time.sleep(0.001)
+        # check the premission
+        auth_data = context.auth_context()
+        certificate = crypto.load_certificate(crypto.FILETYPE_PEM, auth_data['x509_pem_cert'][0])
+        entrant = certificate.get_subject().organizationName
+
+        # print("this is enterrrrrrrant" , entrant)
+        serialized_gradients = bytes("unathurized member is trying to connect" , 'utf-8')
+        if entrant == "worker":
+            serialized_gradients = bytes("You don't have the premission to access this data", 'utf-8')
+
+
+        elif entrant == "worker server":
+            # print("at least getting here, while the size of partial gradient is " , len(self.partial_gradient_different))
+            # print("this is id of list in the model server servicer" , id(self.partial_gradient_different), "and the iteration number is:" , iter) 
+            while iter >= len(self.partial_gradient_different):
+                time.sleep(0.001)
+            # print("did I pass this fucking stupid while")
+            # print("the size is" , sys.getsizeof(self.partial_gradient_different[iter]))
+            # print("the length of array" , self.partial_gradient_different[iter].shape)
+            
+            serialized_gradients = pickle.dumps(self.partial_gradient_different[iter])
+            # print("in model server servicer, the distances is " , self.partial_gradient_different[iter]) 
+            # print("in model server and the type is :" , self.partial_gradient_different[iter].dtype.name)  
+            # print("in model server servicer, desrialized the disntaces" , np.frombuffer(serialized_gradients, dtype=np.float64))       
+            # print("finallllyyy I can get it")
+
+            
         
-        
-        #serialized_gradients = [tools.tensor_to_bytes(grads) for grads in self.gradients_history[iter]]
-        serialized_gradients = self.gradients_history[iter].tobytes()
         return garfield_pb2.Gradients(gradients=serialized_gradients,
                                       iter=iter)
+
 
     def SendGradient(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
-
-        

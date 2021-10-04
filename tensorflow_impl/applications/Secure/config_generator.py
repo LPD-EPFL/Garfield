@@ -1,6 +1,6 @@
 # coding: utf-8
 ###
- # @file   config_generator_learn.py
+ # @file   config_generator.py
  # @author  Anton Ragot <anton.ragot@epfl.ch>, Jérémy Plassmann <jeremy.plassmann@epfl.ch>
  #
  # @section LICENSE
@@ -32,95 +32,88 @@
 
 import json
 import sys
-import os, os.path
-import errno
-
-# Taken from https://stackoverflow.com/a/600612/119527
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc: # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else: raise
-
-def safe_open_w(path):
-    ''' Open "path" for writing, creating any parent directories as needed.
-    '''
-    mkdir_p(os.path.dirname(path))
-    return open(path, 'w')
 
 
 def main():
-
-    ipports = [(ip[:-1] + ":5000", ip[:-1] + ":6000") for ip in sys.stdin]
-    sys.stdin = open("/dev/tty")
-
-    #ipport_workers, ipport_ps = zip(*ipports)
-
-    tasks_workers = []
-    tasks_ps = []
-
-
     
-    print("How many servers ?")
-    nb_servers = int(input())
-    if nb_servers > len(ipports):
-        print("There are more workers than available nodes.")
+    ipport_workers = []
+    ipport_ps = []
+    
+    print("How many workers ?")
+    nb_workers = int(input())
+
+    if nb_workers < 1:
+        print("There should be at least one worker!")
         exit(0)
 
-    ipport_workers = ipports[:nb_servers]
-    ipport_ps = ipports[:nb_servers]
+    ipports = ["127.0.0.1:" + str(5000 + id) for id in range(nb_workers + 1)]
+    ipport_ps = [ipports[0]]
+    ipport_workers = ipports[1:nb_workers+1]
     cluster = {
-            "worker": ipport_workers,
-            "ps": ipport_ps
-        }
+        "worker": ipport_workers,
+        "ps": ipport_ps
+    }
+
     print("Let's configure the workers !")
 
     for i, ipport in enumerate(ipport_workers):
         print(f"Worker {str(i)} - {ipport} :")
         
-        print("Strategy (median):")
-        strategy = input()
-        if strategy == "":
-            strategy = "Median"
+        print("Strategy (Average):")
+        strategy_g = input()
+        if strategy_g == "":
+            strategy_g = "Average"
 
         print("Attack (None):")
         attack = input()
         if attack == "":
             attack = "None"
-        task = {"type": "worker", "index": i, "strategy": strategy, "attack": attack}
 
+        task = {"type": "worker",
+                "index": i, 
+                "strategy_model": "Average", # Fixed to average as it will not be used
+                "strategy_gradient": strategy_g,
+                "attack": attack
+               }
 
-        with safe_open_w("config/" + ipport.split(':')[0] + "/TF_CONFIG_W") as f:
-            f.write(json.dumps({
-                "cluster": cluster,
-                "task": task
-            }))
-        
-    print("Let's configure the parameter servers !")
+        f = open("config/TF_CONFIG_W" + str(i), "w+")
+        f.write(json.dumps({
+            "cluster": cluster,
+            "task": task
+        }))
+        f.close
+
+    print("Let's configure the parameter server !")
 
     
     for i, ipport in enumerate(ipport_ps):
         print(f"PS {str(i)} - {ipport} :")
-        
-        print("Strategy (average):")
-        strategy = input()
-        if strategy == "":
-            strategy = "Average"
+    
+
+        print("Strategy (Average):")
+        strategy_g = input()
+        if strategy_g == "":
+            strategy_g = "Average"
 
         print("Attack (None):")
         attack = input()
         if attack == "":
             attack = "None"
-        task = {"type": "ps", "index": i, "strategy": strategy, "attack": attack}
 
-        with safe_open_w("config/" + ipport.split(':')[0] + "/TF_CONFIG_PS") as f:
-            f.write(json.dumps({
-                "cluster": cluster,
-                "task": task
-            }))
-        
+        task = {"type": "ps",
+                "index": i, 
+                "strategy_model": "Average", # Fixed to average as it will not be used
+                "strategy_gradient": strategy_g,
+                "attack": attack
+               }
+
+        f = open("config/TF_CONFIG_PS" + str(i), "w+")
+        f.write(json.dumps({
+            "cluster": cluster,
+            "task": task
+        }))
+        f.close
+
     
 if __name__ == "__main__":
     main()

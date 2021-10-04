@@ -12,3 +12,4 @@
 # Ignore saved models
 saved/
 *.swp
+.DS_Store

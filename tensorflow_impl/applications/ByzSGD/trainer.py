@@ -63,10 +63,37 @@ def main():
         model_aggregator = Aggregator_tf(n.get_model_strategy(), len(n.get_all_workers()), FLAGS.nbbyzwrks, FLAGS.native)
 
         for iter in range(FLAGS.max_iter):
+            """
+                - get_models is a function from parents class of worker : server
+                - get_models getting models from each server's connection(which is a garfield_pb2_grpc.MessageExchangeStub object) by calling GetModel Function
+                connection.GetModel(garfield_pb2.Request(iter=iter,job="worker",req_id=self.task_id))
+                - GetModel is a attribute(a little bit confusing for me) that calling unary_unary and unary_unary is calling handler which called 
+                GetModel from service attribute at server
+            """
             models = w.get_models(iter)
+
+            """
+                - aggregate models and gradient are done by the same class
+                - need more time to explore ...
+            """
             aggregated_model = model_aggregator.aggregate(models)
+            """
+                - each server(either server or worker) has a attribute named model
+                - model is a tenserflow model and assigned by Model manager class
+                - set the model to aggregated model
+            """
             w.write_model(aggregated_model)
+            """
+                - basicly compute the gradients
+            """
             loss, grads = w.compute_gradients(iter)
+
+            """
+                - each server(mean servers and workers) has a attribute named service. service is a MessageExchangeServicer.
+                - MessageExchangeServicer has a attribute named gradient_history, which gradient_history[i] is a gradient at iteration i.
+                - commit_gradient add gradient to the gradient_history
+
+            """
             w.commit_gradients(grads)
 
         w.wait_until_termination()
@@ -81,12 +108,26 @@ def main():
         accuracy = 0
         accuracies = {}
         for iter in range(FLAGS.max_iter):
-            
+            """
+                - same a above
+            """
             models = p.get_models(iter)
+            """
+                - same as above
+            """
             aggregate_model = model_aggregator.aggregate(models)
+            """
+                -same as above
+            """
             p.write_model(aggregate_model)
+            """
+                - same as get_model
+            """
             gradients = p.get_gradients(iter)
+
             aggregated_gradient = gradient_aggregator.aggregate(gradients)
+
+            
             model = p.upate_model(aggregated_gradient)
             p.commit_model(model)
             

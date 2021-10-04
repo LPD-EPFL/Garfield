@@ -47,10 +47,11 @@ from . import garfield_pb2
 from . import grpc_message_exchange_servicer
 
 
-class Server:
+
+class NewServer:
     """ Superclass defining a server entity. """
 
-    def __init__(self, network=None, log=False, dataset="mnist", model="Small", batch_size=128, nb_byz_worker=0):
+    def __init__(self, network=None, log=False, dataset="mnist", model="Small", batch_size=128, nb_byz_worker=0, is_secure = False , servicer = grpc_message_exchange_servicer.MessageExchangeServicer):
         self.log = log
 
         self.network = network
@@ -86,28 +87,59 @@ class Server:
 
         ps_hosts = network.get_all_ps()
         worker_hosts = network.get_all_other_worker()
-        self.ps_connections = [tools.set_connection(host) for host in ps_hosts]
-        self.worker_connections = [tools.set_connection(host) for host in worker_hosts]
-
         self.port = network.get_my_port()
         self.task_id = network.get_task_index()
 
         self.m = tf.keras.metrics.Accuracy()
-        
-        
-        # Define grpc server
-        self.service = grpc_message_exchange_servicer.MessageExchangeServicer(tools.flatten_weights(self.model.trainable_variables))
+        if is_secure:
+            #load credentials
+            self.root_certificate = tools.load_credential_from_file("../rsrcs/credentials/root.crt")
+            self.private_key = tools.load_credential_from_file("../rsrcs/credentials/127.0.0.1:"+ self.port + ".pem")
+            self.certificate = tools.load_credential_from_file("../rsrcs/credentials/127.0.0.1:"+ self.port + ".crt")
 
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=30), options=[
-            ('grpc.max_send_message_length', 500 * 1024 * 1024),
-            ('grpc.max_receive_message_length', 500 * 1024 * 1024)
-        ])
-        garfield_pb2_grpc.add_MessageExchangeServicer_to_server(self.service, self.server)
-        self.server.add_insecure_port('localhost:' + str(self.port))
+            #set a secure connection
+            self.ps_connections_dicts = {host : tools.set_secure_connetion(host, self.root_certificate, self.private_key , self.certificate)  for host in ps_hosts}
+            self.ps_connections = [self.ps_connections_dicts[host] for host in self.ps_connections_dicts]
+
+            self.worker_connections = [tools.set_secure_connetion(host , self.root_certificate , self.private_key , self.certificate) for host in worker_hosts]
+
+            #define a secure grpc server
+            self.service = servicer(tools.flatten_weights(self.model.trainable_variables))
+            self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=30),
+                options=[
+                    ('grpc.max_send_message_length', 500 * 1024 * 1024),
+                    ('grpc.max_receive_message_length', 500 * 1024 * 1024)
+                ])
+
+            garfield_pb2_grpc.add_MessageExchangeServicer_to_server(self.service, self.server)
+
+            server_credentials = grpc.ssl_server_credentials(
+                [(self.private_key, self.certificate)],
+                root_certificates = self.root_certificate,
+                require_client_auth = True)
+
+            self.server.add_secure_port('localhost:' + str(self.port) , server_credentials)
+        else:
+            #set a insecure connection 
+            self.ps_connections = [tools.set_connection(host) for host in ps_hosts]
+            self.worker_connections = [tools.set_connection(host) for host in worker_hosts]
+
+            #define a insecure grpc server
+            self.service = servicer(tools.flatten_weights(self.model.trainable_variables))
+
+            self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=30), options=[
+                ('grpc.max_send_message_length', 500 * 1024 * 1024),
+                ('grpc.max_receive_message_length', 500 * 1024 * 1024)
+            ])
+            garfield_pb2_grpc.add_MessageExchangeServicer_to_server(self.service, self.server)
+            self.server.add_insecure_port('localhost:' + str(self.port))
+
+
 
         self.aggregated_weights = None
 
         self.loss_fn = SparseCategoricalCrossentropy(from_logits=True)
+
 
 
     
@@ -135,7 +167,6 @@ class Server:
                 A list of model
         """
         models = []
-        
         for i, connection in enumerate(self.ps_connections):
             counter = 0
             read = False
@@ -144,6 +175,7 @@ class Server:
                     response = connection.GetModel(garfield_pb2.Request(iter=iter,
                                                                 job="worker",
                                                                 req_id=self.task_id))
+
                     serialized_model = response.model
                     model = np.frombuffer(serialized_model, dtype=np.float32)
                     models.append(model)
@@ -152,9 +184,9 @@ class Server:
                     print("Trying to connect to PS node ", i)
                     time.sleep(5)
                     counter+=1
-                    if counter > 100:			#any reasonable large enough number
+                    if counter > 10:			#any reasonable large enough number
                         exit(0)
-            
+
         return models
 
     def write_model(self, model):

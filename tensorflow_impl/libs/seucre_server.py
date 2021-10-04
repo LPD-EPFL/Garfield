@@ -32,8 +32,10 @@
 
 import time
 from concurrent import futures
+import os
 
 import grpc
+import jwt
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
@@ -46,16 +48,51 @@ from . import garfield_pb2_grpc
 from . import garfield_pb2
 from . import grpc_message_exchange_servicer
 
+class AuthorizationValidationInterceptor(grpc.ServerInterceptor):
 
-class Server:
+    def __init__(self , public_keys):
+
+        def abort(ignored_request, context):
+            context.abort(grpc.StatusCode.UNAUTHENTICATED, 'Invalid signature')
+
+        self._abortion = grpc.unary_unary_rpc_method_handler(abort)
+        self.public_keys = public_keys
+
+    def intercept_service(self, continuation, handler_call_details):
+        print("---hand shake have done succefully--------")
+        # role = handler_call_details[0][1]
+
+        # encoded_request = handler_call_details.invocation_metadata[1][1]
+        # decoded_request = jwt.decode(encoded_request , self.public_keys[role] , algorithms="RS256")
+        # if decoded_request['request'] == handler_call_details.invocation_metadata[0][1]:
+        #     return continuation(handler_call_details)
+        # else:
+        #     self._abortion
+        return continuation(handler_call_details)
+        # else:
+        # if decoded_request in handler_call_details.invocation_metadata:
+            # return continuation(handler_call_details)
+        # else:
+            # return self._abortion
+
+
+
+
+class Secure_server:
     """ Superclass defining a server entity. """
 
-    def __init__(self, network=None, log=False, dataset="mnist", model="Small", batch_size=128, nb_byz_worker=0):
+    def __init__(self, network=None, log=False, dataset="mnist", model="Small", batch_size=128, nb_byz_worker=0 , role = "worker1"):
         self.log = log
 
+        self.role = role
         self.network = network
         self.nb_byz_worker = nb_byz_worker
         self.batch_size = batch_size
+        self.port = network.get_my_port()
+
+        self.root_certificate = tools.load_credential_from_file("../rsrcs/credentials/root.crt")
+        self.private_key = tools.load_credential_from_file("../rsrcs/credentials/127.0.0.1:"+ self.port + ".pem")
+        self.certificate = tools.load_credential_from_file("../rsrcs/credentials/127.0.0.1:"+ self.port + ".crt")
 
         dsm = DatasetManager(network, dataset, self.batch_size)
         self.train_data, self.test_data = dsm.data_train, dsm.data_test
@@ -84,33 +121,52 @@ class Server:
 
             self.loss_fn = SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.NONE)
 
+
+
+        
         ps_hosts = network.get_all_ps()
         worker_hosts = network.get_all_other_worker()
-        self.ps_connections = [tools.set_connection(host) for host in ps_hosts]
-        self.worker_connections = [tools.set_connection(host) for host in worker_hosts]
 
-        self.port = network.get_my_port()
+        self.public_keys = {host :tools.load_credential_from_file("../rsrcs/credentials/public_keys/" + host + ".pub") for host in (ps_hosts + worker_hosts)}
+
+        self.ps_connections = [tools.set_secure_connetion(host, self.root_certificate, self.private_key , self.certificate) for host in ps_hosts]
+        self.worker_connections = [tools.set_secure_connetion(host , self.root_certificate , self.private_key , self.certificate) for host in worker_hosts]
+
+        
         self.task_id = network.get_task_index()
 
         self.m = tf.keras.metrics.Accuracy()
         
-        
         # Define grpc server
         self.service = grpc_message_exchange_servicer.MessageExchangeServicer(tools.flatten_weights(self.model.trainable_variables))
 
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=30), options=[
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=30),
+        interceptors = (AuthorizationValidationInterceptor(public_keys = self.public_keys),),
+        options=[
             ('grpc.max_send_message_length', 500 * 1024 * 1024),
             ('grpc.max_receive_message_length', 500 * 1024 * 1024)
         ])
+
         garfield_pb2_grpc.add_MessageExchangeServicer_to_server(self.service, self.server)
-        self.server.add_insecure_port('localhost:' + str(self.port))
+
+        server_credentials = grpc.ssl_server_credentials(
+            [(self.private_key, self.certificate)],
+            root_certificates = self.root_certificate,
+            require_client_auth = True)
+        # server_credentials = grpc.ssl_server_credentials(
+        #     [(self.private_key, self.certificate)],
+        #     root_certificates = self.root_certificate,
+        #     require_client_auth = True)
+
+        print("SERVER ADDRESS ------------------------- " , 'localhost:' + str(self.port))
+        self.server.add_secure_port('localhost:' + str(self.port) , server_credentials)
 
         self.aggregated_weights = None
 
         self.loss_fn = SparseCategoricalCrossentropy(from_logits=True)
 
 
-    
+
     def start(self):
         """ Starts the gRPC server. """
 
@@ -149,6 +205,8 @@ class Server:
                     models.append(model)
                     read = True
                 except Exception as e:
+                    print("EXCEPTIONNNNNNNNNNNN")
+                    print(e)
                     print("Trying to connect to PS node ", i)
                     time.sleep(5)
                     counter+=1
@@ -180,4 +238,5 @@ class Server:
         self.m.reset_states()
         self.m.update_state(y_pred=predictions, y_true=true_val)
         return self.m.result().numpy() * 100
+
 
